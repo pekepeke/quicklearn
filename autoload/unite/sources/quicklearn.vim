@@ -75,19 +75,33 @@ call extend(g:quicklearn, {
 \   'meta': { 'parent': 'css'},
 \   'command': 'css2stylus',}
 \ }, 'keep')
+
+call extend(g:quicklearn, {
+\ 'html/markdown/intermediate': {
+\   'meta': { 'parent': 'html'},
+\   'command': 'html2markdown'},
+\ 'html/haml/intermediate': {
+\   'meta': { 'parent': 'html'},
+\   'command': 'html2haml'},
+\ })
+
 call extend(g:quicklearn, {
 \ 'javascript/coffee/intermediate': {
 \   'meta': { 'parent': 'javascript'},
 \   'command': 'js2coffee', },
-\ 'html/haml/intermediate': {
-\   'meta': { 'parent': 'html'},
-\   'command': 'html2haml'},
 \ 'json/jq/intermediate': {
 \   'meta': { 'parent': 'json'},
 \   'command': 'jq'},
 \ 'rst/intermediate': {
 \   'meta': { 'parent': 'rst'},
 \   'command': 'rst2html'},
+\ })
+
+call extend(g:quicklearn, {
+\ 'slim/html/intermediate': {
+\   'meta': { 'parent': 'html'},
+\   'exec': '%c %o -p %s',
+\   'command': 'slimrb'},
 \ })
 
 call extend(g:quicklearn, {
@@ -102,28 +116,52 @@ call extend(g:quicklearn, {
 " \ }, 'keep')
 
 " inheritance
-for k in keys(g:quicklearn)
+function! s:inheritance(val)
+  let k = a:val
   let v = g:quicklearn[k]
-  for item in ['command', 'exec', 'cmdopt', 'tempfile', 'eval_template']
-    let ofParent = get(g:, 'quickrun#default_config[v.meta.parent]', item)
-    if type(ofParent) != type(0) || ofParent != 0
-      let g:quicklearn[k][item] = get(v, item, ofParent)
-    endif
-    unlet ofParent
-  endfor
-endfor
+  let items = ['command', 'exec', 'cmdopt', 'tempfile', 'eval_template']
+  call map(items, 's:inheritance_items(v:val)')
+endfunction
+
+function! s:inheritance_items(item)
+  let item = a:item
+  if exists('v[item]')
+    return
+  endif
+  let ofParent = get(g:, 'quickrun#default_config[v.meta.parent]')
+  if type(ofParent) != type(0) || ofParent != 0
+    let g:quicklearn[k][item] = get(v, item, ofParent)
+  endif
+  unlet ofParent
+endfunction
 
 " build quickrun command
-for k in keys(g:quicklearn)
+function! s:build_command(val)
+  let k = v:val
+
   let v = g:quicklearn[k]
   let g:quicklearn[k].quickrun_command = printf(
-        \ 'QuickRun %s %s %s -cmdopt %s',
-        \ v.meta.parent == '_' ? '' : '-type ' . v.meta.parent,
-        \ get(v, 'command') ? '-command ' . string(v.command) : '',
-        \ join(s:fmap(get(v, 'exec', []), '"-exec " . string(v:val)'), ' '),
-        \ string(get(v, 'cmdopt', '')))
-endfor
-lockvar g:quicklearn
+  \ 'QuickRun %s %s %s -cmdopt %s',
+  \ v.meta.parent == '_' ? '' : '-type ' . v.meta.parent,
+  \ get(v, 'command') ? '-command ' . string(v.command) : '',
+  \ join(s:fmap(get(v, 'exec', []), '"-exec " . string(v:val)'), ' '),
+  \ string(get(v, 'cmdopt', '')))
+endfunction
+
+function! s:is_executable(key)
+  return !exists('g:quicklearn[a:key]["command"]')
+    \ || executable(g:quicklearn[a:key]["command"])
+endfunction
+
+function! s:init()
+  call map(keys(g:quicklearn), 's:inheritance(v:val)')
+  call map(keys(g:quicklearn), 's:build_command(v:val)')
+
+  call filter(g:quicklearn, 's:is_executable(v:key)')
+  " lockvar g:quicklearn
+endfunction
+
+call s:init()
 
 function! unite#sources#quicklearn#define()
   return s:source
