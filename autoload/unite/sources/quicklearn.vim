@@ -62,54 +62,62 @@ call extend(g:quicklearn, {
 
 call extend(g:quicklearn, {
 \ 'css/sass/intermediate': {
-\   'meta': { 'parent': 'css'},
+\   'meta': { 'parent': '_'},
 \   'command': 'sass-convert',
 \   'cmdopt': '-F css -T sass',
 \   'exec': '%c %o %s /dev/stdout'},
 \ 'css/scss/intermediate': {
-\   'meta': { 'parent': 'css'},
+\   'meta': { 'parent': '_'},
 \   'command': 'sass-convert',
 \   'cmdopt': '-F css -T scss',
 \   'exec': '%c %o %s /dev/stdout'},
 \ 'css/stylus/intermediate': {
-\   'meta': { 'parent': 'css'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'css2stylus',}
 \ }, 'keep')
 
 call extend(g:quicklearn, {
 \ 'html/markdown/intermediate': {
-\   'meta': { 'parent': 'html'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'html2markdown'},
 \ 'html/haml/intermediate': {
-\   'meta': { 'parent': 'html'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'html2haml'},
 \ })
 
 call extend(g:quicklearn, {
 \ 'javascript/coffee/intermediate': {
-\   'meta': { 'parent': 'javascript'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'js2coffee', },
 \ 'json/jq/intermediate': {
-\   'meta': { 'parent': 'json'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'jq'},
 \ 'rst/intermediate': {
-\   'meta': { 'parent': 'rst'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'rst2html'},
 \ })
 
 call extend(g:quicklearn, {
 \ 'slim/html/intermediate': {
-\   'meta': { 'parent': 'html'},
-\   'exec': '%c %o -p %s',
+\   'meta': { 'parent': '_'},
+\   'exec': 'slimb %o -p %s',
 \   'command': 'slimrb'},
 \ })
 
 call extend(g:quicklearn, {
 \ 'markdown/md2backlog/intermediate': {
-\   'meta': { 'parent': 'markdown'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'md2backlog'},
 \ 'markdown/md2help/intermediate': {
-\   'meta': { 'parent': 'markdown'},
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
 \   'command': 'vim-helpfile'},
 \ }, 'keep')
 " call extend(g:quicklearn, {
@@ -143,7 +151,7 @@ function! s:build_command(val)
   let g:quicklearn[k].quickrun_command = printf(
   \ 'QuickRun %s %s %s -cmdopt %s',
   \ v.meta.parent == '_' ? '' : '-type ' . v.meta.parent,
-  \ get(v, 'command') ? '-command ' . string(v.command) : '',
+  \ !empty(get(v, 'command', "")) ? '-command ' . string(v.command) : '',
   \ join(s:fmap(get(v, 'exec', []), '"-exec " . string(v:val)'), ' '),
   \ string(get(v, 'cmdopt', '')))
 endfunction
