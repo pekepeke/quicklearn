@@ -93,6 +93,14 @@ call extend(g:quicklearn, {
 \   'meta': { 'parent': '_'},
 \   'exec': '%c %o %s',
 \   'command': 'js2coffee', },
+\ 'javascript/jsx/intermediate': {
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
+\   'command': 'jsx', },
+\ 'javascript/babel/intermediate': {
+\   'meta': { 'parent': '_'},
+\   'exec': '%c %o %s',
+\   'command': 'babel', },
 \ 'json/jq/intermediate': {
 \   'meta': { 'parent': '_'},
 \   'exec': '%c %o %s',
@@ -157,8 +165,8 @@ function! s:build_command(val)
 endfunction
 
 function! s:is_executable(key)
-  return !exists('g:quicklearn[a:key]["command"]')
-    \ || executable(g:quicklearn[a:key]["command"])
+  return exists('g:quicklearn[a:key]["command"]')
+    \ && executable(g:quicklearn[a:key]["command"])
 endfunction
 
 function! s:init()
