@@ -105,7 +105,7 @@ call extend(g:quicklearn, {
 \   'meta': { 'parent': '_'},
 \   'exec': '%c %o %s',
 \   'command': 'jq'},
-\ 'rst/intermediate': {
+\ 'rst/html/intermediate': {
 \   'meta': { 'parent': '_'},
 \   'exec': '%c %o %s',
 \   'command': 'rst2html'},
@@ -136,32 +136,36 @@ function! s:inheritance(val)
   let k = a:val
   let v = g:quicklearn[k]
   let items = ['command', 'exec', 'cmdopt', 'tempfile', 'eval_template']
-  call map(items, 's:inheritance_items(v:val)')
+  call map(items, 's:inheritance_items(k, v, v:val)')
 endfunction
 
-function! s:inheritance_items(item)
+function! s:inheritance_items(k, v, item)
   let item = a:item
-  if exists('v[item]')
+  if exists('a:v[item]')
     return
   endif
-  let ofParent = get(g:, 'quickrun#default_config[v.meta.parent]')
+
+  let parent = exists('a:v.meta.parent') ? a:v.meta.parent : '_'
+  let ofParent = get(g:, 'quickrun#default_config[parent]')
   if type(ofParent) != type(0) || ofParent != 0
-    let g:quicklearn[k][item] = get(v, item, ofParent)
+    let g:quicklearn[a:k][item] = get(a:v, item, ofParent)
   endif
   unlet ofParent
 endfunction
 
 " build quickrun command
 function! s:build_command(val)
-  let k = v:val
+  let k = a:val
 
-  let v = g:quicklearn[k]
+  let val = g:quicklearn[k]
+  let parent = get(get(val, 'meta', {}), 'parent', '_')
   let g:quicklearn[k].quickrun_command = printf(
-  \ 'QuickRun %s %s %s -cmdopt %s',
-  \ v.meta.parent == '_' ? '' : '-type ' . v.meta.parent,
-  \ !empty(get(v, 'command', "")) ? '-command ' . string(v.command) : '',
-  \ join(s:fmap(get(v, 'exec', []), '"-exec " . string(v:val)'), ' '),
-  \ string(get(v, 'cmdopt', '')))
+  \ 'QuickRun %s %s %s -cmdopt %s -outputter %s',
+  \ '-type ' . parent,
+  \ !empty(get(val, 'command', "")) ? '-command ' . string(val.command) : '',
+  \ join(s:fmap(get(val, 'exec', []), '"-exec " . string(v:val)'), ' '),
+  \ string(get(val, 'cmdopt', '')),
+  \ string(get(val, 'outputter', 'buffer')))
 endfunction
 
 function! s:is_executable(key)
